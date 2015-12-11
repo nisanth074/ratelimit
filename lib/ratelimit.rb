@@ -41,12 +41,12 @@ class Ratelimit
   def add(subject, count = 1)
     bucket = get_bucket
     subject = "#{@key}:#{subject}"
-    redis.pipelined do
-      redis.hincrby(subject, bucket, count)
-      redis.hdel(subject, (bucket + 1) % @bucket_count)
-      redis.hdel(subject, (bucket + 2) % @bucket_count)
-      redis.expire(subject, @bucket_expiry)
-    end.first
+
+    counter_value = redis.hincrby(subject, bucket, count)
+    redis.hdel(subject, (bucket + 1) % @bucket_count)
+    redis.hdel(subject, (bucket + 2) % @bucket_count)
+    redis.expire(subject, @bucket_expiry)
+    counter_value
   end
 
   # Returns the count for a given subject and interval
